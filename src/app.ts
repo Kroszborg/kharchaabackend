@@ -23,8 +23,10 @@ app.set('trust proxy', true);
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
+
+// CORS - allow all origins for development
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') ?? '*',
+  origin: true, // dynamically reflects request origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
