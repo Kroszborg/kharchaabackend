@@ -16,12 +16,18 @@ import emailParseRoutes from './routes/email-parse';
 
 const app = express();
 
+// Trust proxy (needed for rate limiting behind Render/nginx)
+app.set('trust proxy', true);
+
 // Security
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') ?? '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 // Logging
