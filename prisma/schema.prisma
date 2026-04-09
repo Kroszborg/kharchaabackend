@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions   Transaction[]
+  accounts       Account[]
+  insightsCaches InsightsCache[]
+  refreshTokens  RefreshToken[]
+}
+
+model Category {
+  id       String @id @default(cuid())
+  name     String @unique
+  color    String
+  icon     String
+  isSystem Boolean @default(true)
+
+  transactions Transaction[]
+  merchants    Merchant[]
+}
+
+model Merchant {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  categoryId String?
+  metadata   Json    @default("{}")
+
+  category     Category?     @relation(fields: [categoryId], references: [id])
+  transactions Transaction[]
+}
+
+model Account {
+  id       String  @id @default(cuid())
+  userId   String
+  name     String
+  type     String  // savings, current, credit
+  bank     String
+  balance  Float   @default(0)
+  isActive Boolean @default(true)
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         String   @id @default(cuid())
+  userId     String
+  amount     Float
+  type       TxType
+  merchantId String?
+  categoryId String?
+  accountId  String?
+  source     TxSource @default(MANUAL)
+  timestamp  DateTime
+  note       String?
+  metadata   Json     @default("{}")
+  syncedAt   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  merchant Merchant? @relation(fields: [merchantId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  account  Account?  @relation(fields: [accountId], references: [id])
+}
+
+model InsightsCache {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  period      String
+  data        Json
+  generatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type, period])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum TxType {
+  DEBIT
+  CREDIT
+}
+
+enum TxSource {
+  MANUAL
+  SMS
+  EMAIL
+  IMPORT
+}
