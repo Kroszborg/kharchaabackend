@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './utils/swagger';
 import { apiLimiter } from './middleware/rate-limiter';
 import { errorHandler } from './middleware/error-handler';
 
@@ -37,6 +39,31 @@ app.use('/api', apiLimiter);
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Documentation (Swagger UI)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: false,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Kharchaaa API Docs',
+}));
+
+// Root endpoint - API info
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Kharchaaa API',
+    version: '1.0.0',
+    description: 'Personal Finance Manager Backend API',
+    endpoints: {
+      health: '/health',
+      docs: '/api-docs',
+      auth: '/api/auth',
+      transactions: '/api/transactions',
+      analytics: '/api/analytics',
+      categories: '/api/categories',
+      sync: '/api/sync',
+    },
+  });
 });
 
 // Routes
